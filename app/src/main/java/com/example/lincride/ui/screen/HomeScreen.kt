@@ -3,13 +3,16 @@ package com.example.lincride.ui.screen
 import LincDragHandle
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -26,7 +29,10 @@ import com.example.lincride.R
 import com.example.lincride.ui.theme.LincColors
 import com.example.lincride.ui.widget.BottomSheetBanner
 import com.example.lincride.ui.widget.MapView
+import com.example.lincride.ui.widget.StopNewRequestsButton
+import com.example.lincride.ui.widget.bottom_sheet.OfferRideBottomSheet
 import com.example.lincride.ui.widget.bottom_sheet.RideModeBottomSheet
+import com.example.lincride.ui.widget.bottom_sheet.RiderActionBottomSheet
 import com.example.lincride.viewModel.RideSimulationViewModel
 import com.example.lincride.viewModel.RideState
 
@@ -35,15 +41,19 @@ import com.example.lincride.viewModel.RideState
 @Composable
 fun HomeScreen(viewModel: RideSimulationViewModel) {
     val rideState by viewModel.rideState.collectAsState()
-    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.Expanded
-    ))
+    val scaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.Expanded
+        )
+    )
     val scope = rememberCoroutineScope()
     val sheetBackgroundColor =
         if (rideState == RideState.Initial) LincColors.secondary else LincColors.surface
 
     BottomSheetScaffold(
-        modifier = Modifier.fillMaxHeight().fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxWidth(),
         scaffoldState = scaffoldState,
         sheetContainerColor = sheetBackgroundColor,
         sheetShadowElevation = 8.dp,
@@ -68,20 +78,33 @@ fun HomeScreen(viewModel: RideSimulationViewModel) {
 
                 is RideState.DrivingToPickup,
                 is RideState.OfferRideBottomSheet -> {
-                    Box(Modifier.height(132.dp).fillMaxWidth().background(color = LincColors.stroke)){
+                    OfferRideBottomSheet(
+                        viewModel = viewModel,
+                    )
+                }
 
-                    }
+                is RideState.RiderAction -> {
+                    RiderActionBottomSheet(
+                        viewModel = viewModel
+                    )
+                }
+                is RideState.DrivingToDestination -> {
+                    RiderActionBottomSheet(
+                        viewModel = viewModel
+                    )
                 }
 
                 else -> {}
             }
         }
     ) {
+        // Map view
         MapView(
-            modifier = Modifier.fillMaxSize().statusBarsPadding(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
             viewModel = viewModel
         )
-
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.lincride
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
@@ -69,6 +70,7 @@ fun LincRideMainScreen(viewModel: RideSimulationViewModel, navController: NavHos
 }
 
 
+@SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun LincRidePreview(modifier: Modifier = Modifier) {

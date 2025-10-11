@@ -22,7 +22,7 @@ fun animateCarAlongRoute(
     route: List<LatLng>,
     isAnimating: Boolean,
     durationMs: Long = 10000L, // Total duration for entire route
-    onComplete: () -> Unit = {},
+    onComplete: (animatedPosition: LatLng, animatedBearing: Float) -> Unit = {_,_->},
 ): Triple<LatLng, Float, List<LatLng>> {
     // Current position state - these emit values during animation
     val animatedLat = remember { Animatable((route.firstOrNull()?.latitude ?: 0.0).toFloat()) }
@@ -77,7 +77,7 @@ fun animateCarAlongRoute(
             }
         }
         
-        onComplete()
+        onComplete(LatLng(animatedLat.value.toDouble(), animatedLng.value.toDouble()), currentBearing)
     }
     
     // Return current animated values and remaining route

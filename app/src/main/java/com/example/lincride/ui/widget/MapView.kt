@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,10 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.example.lincride.R
 import com.example.lincride.ui.theme.LincColors
 import com.example.lincride.viewModel.RideSimulationViewModel
@@ -49,9 +47,8 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -80,7 +77,7 @@ fun MapView(
     }
 
     // Camera position state
-    val cameraPositionState = rememberCameraPositionState {
+    var cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(defaultLocation, 16f)
     }
 
@@ -150,6 +147,18 @@ fun MapView(
             // Add markers based on ride state
             when (rideState) {
                 is RideState.Initial -> {
+                    // Reset camera to default position
+                    LaunchedEffect(Unit) {
+                        driverLocation = defaultLocation
+                        driverBearing = calculateBearing(defaultLocation, pickupLocation)
+                        cameraPositionState.animate(
+                            update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
+                                CameraPosition.fromLatLngZoom(defaultLocation, 16f)
+                            ),
+                            durationMs = 800
+                        )
+                    }
+
                     // Show driver location with animated marker
                     AnimatedCarMarker(
                         position = driverLocation,
@@ -205,11 +214,33 @@ fun MapView(
                         route = route,
                         isAnimating = true,
                         durationMs = 8000L, // 8 seconds total
-                        onComplete = {
+                        onComplete = {animatedPosition, _ ->
                             driverLocation = pickupLocation
-                            viewModel.confirmPickup()
+                            viewModel.viewModelScope.launch {
+                                cameraPositionState.animate(
+                                    update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
+                                        CameraPosition.fromLatLngZoom(animatedPosition, 16f)
+                                    ),
+                                    durationMs = 300
+                                )
+                            }
+                            viewModel.showConfirmPickupBottomSheet()
                         }
                     )
+
+                    // Calculate and save progress to view model
+                    LaunchedEffect(animatedPosition, remainingRoute) {
+                        // Calculate progress based on remaining route length
+                        val totalDistance = route.size.toFloat()
+                        val remainingDistance = remainingRoute.size.toFloat()
+                        val progress = if (totalDistance > 0) {
+                            1f - (remainingDistance / totalDistance)
+                        } else {
+                            0f
+                        }
+                        viewModel.updateCarMovementProgress(progress)
+                    }
+
 
                     // Draw shrinking route polyline (only remaining path)
                     RoutePolyline(
@@ -245,7 +276,7 @@ fun MapView(
                     val routeToDestination = remember(pickupLocation, destinationLocation) {
                         createSmoothRoute(pickupLocation, destinationLocation, 100)
                     }
-                    
+
                     RoutePolyline(
                         points = routeToDestination,
                         color = Color(0xFFD97B2E),
@@ -280,11 +311,24 @@ fun MapView(
                         route = routeToDestination,
                         isAnimating = true,
                         durationMs = 10000L, // 10 seconds for longer route
-                        onComplete = {
+                        onComplete = {_, _ ->
                             driverLocation = destinationLocation
                             viewModel.endTrip()
                         }
                     )
+
+                    // Calculate and save progress to view model
+                    LaunchedEffect(animatedPosition, remainingRoute) {
+                        // Calculate progress based on remaining route length
+                        val totalDistance = routeToDestination.size.toFloat()
+                        val remainingDistance = remainingRoute.size.toFloat()
+                        val progress = if (totalDistance > 0) {
+                            1f - (remainingDistance / totalDistance)
+                        } else {
+                            0f
+                        }
+                        viewModel.updateCarMovementProgress(progress)
+                    }
 
                     // Draw shrinking route polyline (only remaining path)
                     RoutePolyline(
@@ -348,6 +392,7 @@ private fun MapOverLayView(
     viewModel: RideSimulationViewModel,
     modifier: Modifier = Modifier
 ) {
+    val rideState by viewModel.rideState.collectAsState()
     Column(
         modifier
             .wrapContentWidth()
@@ -355,15 +400,38 @@ private fun MapOverLayView(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Stop new requests button - shown during active ride states
+
+        if (rideState is RideState.RiderAction ||
+            rideState is RideState.DrivingToPickup ||
+            rideState is RideState.DrivingToDestination ||
+            rideState is RideState.OfferRideBottomSheet
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(top = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                StopNewRequestsButton(
+                    onClick = {
+                        // Handle stop new requests action
+                        // This could reset to initial state or pause ride requests
+                    }
+                )
+            }
+        }
         Spacer(modifier = Modifier.weight(1f))
         Box(
             modifier = Modifier
-                .size(60.dp)
+                .size(50.dp)
                 .background(shape = CircleShape, color = LincColors.surface)
 //                .shadow(1.dp)
                 .clip(
                     CircleShape
-                ).border(
+                )
+                .border(
                     BorderStroke(1.dp, LincColors.stroke.copy(0.7f)),
                     shape = CircleShape
                 )
@@ -371,7 +439,7 @@ private fun MapOverLayView(
 
                     viewModel.resetSimulation()
 
-                },
+                }.align(Alignment.End),
             contentAlignment = Alignment.Center
         ) {
             //Reset Icon

@@ -51,5 +51,12 @@ val Typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
         lineHeight = 15.sp
-    )
+    ),
+
+    labelSmall = TextStyle(
+        fontFamily = SFProDisplay,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 21.sp
+    ),
 )
