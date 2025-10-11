@@ -33,7 +33,7 @@ fun RideModeBottomSheet(
 
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
-            delay(10 * 1000)
+            delay(5 * 1000)
             viewModel.showOfferRideBottomSheet()
         }
     }
