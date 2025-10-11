@@ -26,18 +26,20 @@ class RideSimulationViewModel @Inject constructor() : ViewModel() {
     // Trigger Event 2: Show "Offer a Ride" Bottom Sheet
      fun showOfferRideBottomSheet() {
         _rideState.value = RideState.OfferRideBottomSheet
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(2 * 1000) // Simulate user interaction delay
+            startDrivingToPickup()
+        }
     }
 
     // Start driving simulation to pickup (Event 3)
     fun startDrivingToPickup() {
-        viewModelScope.launch {
-            // Simulate progress updates from 0 to 1
-            for (i in 1..10) {
-                _rideState.value = RideState.DrivingToPickup(i / 10f)
-                kotlinx.coroutines.delay(500)
-            }
-            _rideState.value = RideState.PickupConfirmation
-        }
+        _rideState.value = RideState.DrivingToPickup(0f)
+    }
+    
+    // Confirm arrival at pickup location
+    fun confirmPickup() {
+        _rideState.value = RideState.PickupConfirmation
     }
 
     // Trigger Event 4: Show Rider Action Bottom Sheet
@@ -47,13 +49,12 @@ class RideSimulationViewModel @Inject constructor() : ViewModel() {
 
     // Start driving simulation to destination (Event 5)
     fun startDrivingToDestination() {
-        viewModelScope.launch {
-            for (i in 1..10) {
-                _rideState.value = RideState.DrivingToDestination(i / 10f)
-                kotlinx.coroutines.delay(500)
-            }
-            _rideState.value = RideState.TripEnded
-        }
+        _rideState.value = RideState.DrivingToDestination(0f)
+    }
+    
+    // End trip - arrival at destination
+    fun endTrip() {
+        _rideState.value = RideState.TripEnded
     }
 
 
@@ -67,10 +68,7 @@ class RideSimulationViewModel @Inject constructor() : ViewModel() {
         _rideModeState.value = mode
         when (mode) {
             RideModeState.OfferRideState -> showOfferRideBottomSheet()
-            RideModeState.JoinRide -> {
-                TODO("Implement Join Ride functionality")
-            }
-
+            RideModeState.JoinRide -> showOfferRideBottomSheet()
             else -> TODO()
         }
     }

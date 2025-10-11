@@ -34,7 +34,7 @@ fun BottomSheetBanner(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp).padding(top = 10.dp, bottom = 2.dp),
+                .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 0.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {

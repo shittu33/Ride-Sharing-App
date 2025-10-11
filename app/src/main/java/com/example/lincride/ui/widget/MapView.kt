@@ -1,0 +1,487 @@
+package com.example.lincride.ui.widget
+
+import android.Manifest
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.example.lincride.R
+import com.example.lincride.ui.theme.LincColors
+import com.example.lincride.viewModel.RideSimulationViewModel
+import com.example.lincride.viewModel.RideState
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun MapView(
+    modifier: Modifier = Modifier,
+    viewModel: RideSimulationViewModel,
+) {
+    val rideState by viewModel.rideState.collectAsState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Default location (e.g., Lagos, Nigeria or a central location)
+    val defaultLocation = LatLng(6.6111, 3.3645) // Lagos coordinates
+
+    // Pickup and destination locations (example - replace with actual data from ViewModel)
+    val pickupLocation = remember { LatLng(6.6095, 3.3685) }
+    val destinationLocation = remember { LatLng(6.6035, 3.3695) }
+
+    // Driver location and bearing state
+    var driverLocation by remember { mutableStateOf(defaultLocation) }
+    var driverBearing by remember { mutableFloatStateOf(0f) }
+
+    // Calculate initial bearing to pickup
+    LaunchedEffect(Unit) {
+        driverBearing = calculateBearing(defaultLocation, pickupLocation)
+    }
+
+    // Camera position state
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(defaultLocation, 16f)
+    }
+
+    // Location permission state
+    val locationPermissionState = rememberPermissionState(
+        permission = Manifest.permission.ACCESS_FINE_LOCATION
+    )
+
+
+    // Map UI settings
+    var mapProperties by remember {
+        mutableStateOf(
+            MapProperties(
+                isMyLocationEnabled = locationPermissionState.status.isGranted,
+                mapType = MapType.NORMAL,
+                isBuildingEnabled = true,
+                isIndoorEnabled = false,
+                isTrafficEnabled = false,
+                minZoomPreference = 10f,
+                maxZoomPreference = 20f,
+                mapStyleOptions = MapStyleOptions(mapStyleJson),
+//                isTrafficEnabled = true,
+//                isBuildingEnabled = true
+            )
+        )
+    }
+
+    var uiSettings by remember {
+        mutableStateOf(
+            MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false,
+                compassEnabled = false,
+//                indoorLevelPickerEnabled = false,
+//                mapToolbarEnabled = false,
+//                rotationGesturesEnabled = true,
+//                scrollGesturesEnabled = true,
+//                scrollGesturesEnabledDuringRotateOrZoom = true,
+//                tiltGesturesEnabled = false,
+//                zoomGesturesEnabled = true
+            )
+        )
+    }
+
+    // Request location permission on first composition
+    LaunchedEffect(Unit) {
+        if (!locationPermissionState.status.isGranted) {
+            locationPermissionState.launchPermissionRequest()
+        }
+    }
+
+    // Update map properties when permission is granted
+    LaunchedEffect(locationPermissionState.status.isGranted) {
+        mapProperties = mapProperties.copy(
+            isMyLocationEnabled = locationPermissionState.status.isGranted
+        )
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = mapProperties,
+            uiSettings = uiSettings,
+//            locationSource =
+        ) {
+            // Add markers based on ride state
+            when (rideState) {
+                is RideState.Initial -> {
+                    // Show driver location with animated marker
+                    AnimatedCarMarker(
+                        position = driverLocation,
+                        rotation = driverBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showLabel = true,
+                        showRipple = true,
+                        showBeam = true
+                    )
+                }
+
+                is RideState.OfferRideBottomSheet -> {
+                    // Create smooth route preview from driver to pickup
+                    val route = remember(defaultLocation, pickupLocation) {
+                        createSmoothRoute(defaultLocation, pickupLocation, 100)
+                    }
+
+                    // Draw route line (orange)
+                    RoutePolyline(
+                        points = route,
+                        color = Color(0xFFD97B2E),
+                        width = 12f
+                    )
+
+                    // Show pickup location marker with ripple animation
+                    PickupLocationMarker(
+                        position = pickupLocation,
+                        title = "Pickup Location",
+                        snippet = "Tap to view details"
+                    )
+
+
+                    // Show driver car pointing toward pickup
+                    AnimatedCarMarker(
+                        position = driverLocation,
+                        rotation = driverBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = false,
+                        showBeam = false
+                    )
+                }
+
+                is RideState.DrivingToPickup -> {
+                    // Create smooth route from start to pickup
+                    val route = remember(defaultLocation, pickupLocation) {
+                        createSmoothRoute(defaultLocation, pickupLocation, 60)
+                    }
+
+                    // Animate car along the route and get remaining route for shrinking polyline
+                    val (animatedPosition, animatedBearing, remainingRoute) = animateCarAlongRoute(
+                        route = route,
+                        isAnimating = true,
+                        durationMs = 8000L, // 8 seconds total
+                        onComplete = {
+                            driverLocation = pickupLocation
+                            viewModel.confirmPickup()
+                        }
+                    )
+
+                    // Draw shrinking route polyline (only remaining path)
+                    RoutePolyline(
+                        points = remainingRoute,
+                        color = Color(0xFFD97B2E),
+                        width = 12f
+                    )
+
+                    // Show pickup marker with ripple animation
+                    PickupLocationMarker(
+                        position = pickupLocation,
+                        title = "Pickup Location"
+                    )
+
+                    // Render moving car with beam during movement
+                    AnimatedCarMarker(
+                        position = animatedPosition,
+                        rotation = animatedBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = false,
+                        showBeam = false
+                    )
+                }
+
+                is RideState.PickupConfirmation -> {
+                    // Calculate bearing to destination for proper car orientation
+                    LaunchedEffect(Unit) {
+                        driverBearing = calculateBearing(pickupLocation, destinationLocation)
+                    }
+
+                    // Show route to destination
+                    val routeToDestination = remember(pickupLocation, destinationLocation) {
+                        createSmoothRoute(pickupLocation, destinationLocation, 100)
+                    }
+                    
+                    RoutePolyline(
+                        points = routeToDestination,
+                        color = Color(0xFFD97B2E),
+                        width = 12f
+                    )
+
+                    // Car stationary at pickup location
+                    AnimatedCarMarker(
+                        position = pickupLocation,
+                        rotation = driverBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = true,
+                        showBeam = false
+                    )
+
+                    // Show destination marker
+                    DestinationMarker(
+                        position = destinationLocation,
+                        title = "Destination"
+                    )
+                }
+
+                is RideState.DrivingToDestination -> {
+                    // Create smooth route from pickup to destination
+                    val routeToDestination = remember(pickupLocation, destinationLocation) {
+                        createSmoothRoute(pickupLocation, destinationLocation, 50)
+                    }
+
+                    // Animate car along the route to destination and get remaining route
+                    val (animatedPosition, animatedBearing, remainingRoute) = animateCarAlongRoute(
+                        route = routeToDestination,
+                        isAnimating = true,
+                        durationMs = 10000L, // 10 seconds for longer route
+                        onComplete = {
+                            driverLocation = destinationLocation
+                            viewModel.endTrip()
+                        }
+                    )
+
+                    // Draw shrinking route polyline (only remaining path)
+                    RoutePolyline(
+                        points = remainingRoute,
+                        color = Color(0xFFD97B2E),
+                        width = 12f
+                    )
+
+                    // Show destination marker
+                    DestinationMarker(
+                        position = destinationLocation,
+                        title = "Destination"
+                    )
+
+                    // Render moving car with beam
+                    AnimatedCarMarker(
+                        position = animatedPosition,
+                        rotation = animatedBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = false,
+                        showBeam = true
+                    )
+                }
+
+                is RideState.TripEnded -> {
+                    // Car at destination (no animation)
+                    AnimatedCarMarker(
+                        position = driverLocation,
+                        rotation = driverBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = false,
+                        showBeam = false
+                    )
+                }
+
+                RideState.RiderAction -> {
+                    AnimatedCarMarker(
+                        position = driverLocation,
+                        rotation = driverBearing,
+                        title = "You",
+                        carIconRes = R.drawable.car,
+                        showRipple = false,
+                        showBeam = false
+                    )
+                }
+            }
+        }
+
+        // Overlay controls
+        MapOverLayView(
+            viewModel = viewModel,
+            modifier = Modifier.align(Alignment.TopEnd)
+        )
+    }
+}
+
+@Composable
+private fun MapOverLayView(
+    viewModel: RideSimulationViewModel,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier
+            .wrapContentWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(shape = CircleShape, color = LincColors.surface)
+//                .shadow(1.dp)
+                .clip(
+                    CircleShape
+                ).border(
+                    BorderStroke(1.dp, LincColors.stroke.copy(0.7f)),
+                    shape = CircleShape
+                )
+                .clickable {
+
+                    viewModel.resetSimulation()
+
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            //Reset Icon
+            Icon(
+                painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_rotate),
+                contentDescription = "Reset Simulation",
+                tint = Color.Blue
+            )
+        }
+        //Round Icon Button to reset simulation
+
+        Spacer(modifier = Modifier.weight(6f))
+    }
+}
+
+
+// Custom map style matching Figma design
+val mapStyleJson = """
+    [
+      {
+        "elementType": "geometry",
+        "stylers": [{"color": "#f5f5f5"}]
+      },
+      {
+        "elementType": "labels.icon",
+        "stylers": [{"visibility": "off"}]
+      },
+      {
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#616161"}]
+      },
+      {
+        "elementType": "labels.text.stroke",
+        "stylers": [{"color": "#f5f5f5"}]
+      },
+      {
+        "featureType": "administrative.land_parcel",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#bdbdbd"}]
+      },
+      {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [{"color": "#eeeeee"}]
+      },
+      {
+        "featureType": "poi",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#757575"}]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "geometry",
+        "stylers": [{"color": "#e5e5e5"}]
+      },
+      {
+        "featureType": "poi.park",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#9e9e9e"}]
+      },
+      {
+        "featureType": "road",
+        "elementType": "geometry",
+        "stylers": [{"color": "#ffffff"}]
+      },
+      {
+        "featureType": "road.arterial",
+        "elementType": "geometry",
+        "stylers": [{"color": "#ffffff"}]  // ← Add this for arterial roads
+      },
+      {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#757575"}]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "geometry",
+        "stylers": [{"color": "#ffffff"}]
+      },
+      {
+        "featureType": "road.highway",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#616161"}]
+      },
+      {
+        "featureType": "road.local",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#9e9e9e"}]
+      },
+      {
+        "featureType": "transit.line",
+        "elementType": "geometry",
+        "stylers": [{"color": "#e5e5e5"}]
+      },
+      {
+        "featureType": "transit.station",
+        "elementType": "geometry",
+        "stylers": [{"color": "#eeeeee"}]
+      },
+      {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [{"color": "#ffffff"}]
+      },
+      {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [{"color": "#9e9e9e"}]
+      }
+    ]
+    """.trimIndent()
+

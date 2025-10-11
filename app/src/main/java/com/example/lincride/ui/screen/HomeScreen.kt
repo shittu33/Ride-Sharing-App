@@ -66,6 +66,7 @@ fun HomeScreen(viewModel: RideSimulationViewModel) {
                     )
                 }
 
+                is RideState.DrivingToPickup,
                 is RideState.OfferRideBottomSheet -> {
                     Box(Modifier.height(132.dp).fillMaxWidth().background(color = LincColors.stroke)){
 
