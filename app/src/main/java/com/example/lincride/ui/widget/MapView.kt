@@ -553,3 +553,119 @@ val mapStyleJson = """
     ]
     """.trimIndent()
 
+/**
+ * Adjusts camera position when bottom sheet moves to keep the map centered properly
+ */
+@Composable
+private fun CameraAdjustmentEffect(
+    camera: CameraPositionState,
+    isBottomSheetMoving: Boolean,
+    bottomPadding: Dp,
+    density: Density
+) {
+    // Track the last camera location before bottom sheet movement
+    var cameraLocation by remember { mutableStateOf(camera.position.target) }
+
+    // Update camera location when user manually moves the map
+    LaunchedEffect(camera.isMoving, camera.cameraMoveStartedReason) {
+        if (!camera.isMoving && camera.cameraMoveStartedReason == CameraMoveStartedReason.GESTURE) {
+            cameraLocation = camera.position.target
+        }
+    }
+
+    // Track if camera has been initialized with initial padding
+    var isCameraInitialized by remember { mutableStateOf(false) }
+
+    // Adjust camera when bottom sheet stops moving
+    LaunchedEffect(isBottomSheetMoving, bottomPadding) {
+        if (isBottomSheetMoving) return@LaunchedEffect
+
+        if (!isCameraInitialized) {
+            // Initial adjustment: Shift camera down by half the bottom padding
+            // This compensates for the map thinking the center is higher than it actually is
+            isCameraInitialized = true
+            val verticalShiftPx = with(density) { bottomPadding.toPx() / 2 }
+            val update =
+                CameraUpdateFactory.scrollBy(0f, verticalShiftPx)
+            camera.animate(update, durationMs = 300)
+        } else {
+            // Subsequent adjustments: Return to the saved camera location
+            val update = CameraUpdateFactory.newLatLng(cameraLocation)
+            camera.animate(update, durationMs = 300)
+        }
+    }
+}
+
+@Composable
+private fun EmergencyButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = LincColors.primary // Red color for emergency
+        ),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_shield),
+            contentDescription = "Emergency",
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Emergency",
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SimulationActionButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    @DrawableRes icon: Int,
+    iconSize: Dp = 28.dp,
+    tile: String,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            TooltipAnchorPosition.Above
+        ),
+        tooltip = {
+            RichTooltip(
+                modifier = Modifier.height(50.dp),
+                title = { Text(tile) },
+                action = {
+                },
+                caretShape = TooltipDefaults.caretShape(DpSize(28.dp, 20.dp)),
+            ) { }
+        },
+        state = rememberTooltipState(isPersistent = false),
+    ) {
+        FloatingActionButton(
+            onClick = onClick,
+            modifier = Modifier.size(48.dp),
+            containerColor = LincColors.surface,
+            shape = CircleShape,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 2.dp,
+                pressedElevation = 8.dp
+            ),
+        ) {
+
+
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = tile,
+                modifier = modifier
+                    .size(iconSize)
+            )
+        }
+    }
+
+}

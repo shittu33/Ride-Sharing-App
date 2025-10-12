@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
+import com.example.lincride.viewModel.RideSimulationViewModel
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -22,6 +23,7 @@ fun animateCarAlongRoute(
     route: List<LatLng>,
     isAnimating: Boolean,
     durationMs: Long = 10000L, // Total duration for entire route
+    viewModel: RideSimulationViewModel,
     onComplete: (animatedPosition: LatLng, animatedBearing: Float) -> Unit = {_,_->},
 ): Triple<LatLng, Float, List<LatLng>> {
     // Current position state - these emit values during animation

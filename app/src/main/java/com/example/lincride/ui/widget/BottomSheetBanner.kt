@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,17 +26,21 @@ fun BottomSheetBanner(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Box(
         modifier =
-        Modifier
-            .fillMaxWidth(),
-        color = LincColors.secondary,
-        shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp),
+        modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .shadow(18.dp).padding(top=1.dp)
+            .background(color = LincColors.secondary, shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+            .clip(RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp))
+
     ) {
         Row(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 0.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 10.dp, bottom = 0.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
