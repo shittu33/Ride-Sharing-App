@@ -78,7 +78,7 @@ fun OfferRideBottomSheet(
             // Progress bar with car and destination icons
             PickupProgressBarWidget(progress = progress)
 
-            HorizontalDivider(Modifier.height(6.dp), color = Color(0xFFD1D1D1), thickness = 0.4.dp)
+            HorizontalDivider(Modifier.height(6.dp), color = LincColors.stroke, thickness = 0.4.dp)
 
             Spacer(modifier = Modifier.height(6.dp))
 

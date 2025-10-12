@@ -1,5 +1,7 @@
 package com.example.lincride.ui.widget.bottom_sheet
 
+import ShareRideInfoButton
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -19,13 +21,12 @@ import com.example.lincride.R
 import com.example.lincride.ui.theme.LincColors
 import com.example.lincride.ui.widget.*
 import com.example.lincride.viewModel.RideSimulationViewModel
+import com.example.lincride.viewModel.RideState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
  * Bottom sheet shown during "Rider Action" state
- * User can swipe to indicate "Didn't show" or "Picked up"
- * Based on Figma design: 14.2.1 - rider is arriving
  */
 @Composable
 fun RiderActionBottomSheet(
@@ -33,12 +34,6 @@ fun RiderActionBottomSheet(
     modifier: Modifier = Modifier
 ) {
 
-    LaunchedEffect(Unit) {
-        viewModel.viewModelScope.launch {
-            delay(5 * 1000)
-            viewModel.startDrivingToDestination()
-        }
-    }
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -68,13 +63,13 @@ fun RiderActionBottomSheet(
                     ),
                     color = LincColors.textPrimary
                 )
-                
+
                 // Waiting time widget
                 WaitingTimeWidget(
                     waitingTime = "04:45"
                 )
             }
-            
+
             // Trip details section
             Column(
                 modifier = Modifier
@@ -99,7 +94,7 @@ fun RiderActionBottomSheet(
                         color = LincColors.textPrimary,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    
+
                     // Rider info
                     RiderInfoWidget(
                         riderName = "Nneka Chukwu",
@@ -109,7 +104,14 @@ fun RiderActionBottomSheet(
                     )
                 }
 
-                HorizontalDivider( color = Color(0xFFD1D1D1), thickness = 1.dp)
+                // Stats section
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
+                    thickness = 0.4.dp,
+                    color = LincColors.stroke
+                )
 
 
                 // Route info
@@ -119,7 +121,7 @@ fun RiderActionBottomSheet(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            
+
             // Swipeable action bar
             SwipeableActionBar(
                 onDidntShow = {
@@ -141,46 +143,23 @@ fun RiderActionBottomSheet(
                     R.drawable.avatar_3,
                 ),
                 additionalCount = 1,
-                modifier = Modifier.padding(horizontal = 12.dp).padding(bottom =10.dp, top = 8.dp)
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 10.dp, top = 8.dp)
             )
 
             // Stats section
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth().height(6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp),
                 thickness = 0.4.dp,
-                color = Color(0xFFD1D1D1)
+                color = LincColors.stroke
             )
 
             // Share button - outlined style
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp, top = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                OutlinedButton(
-                    onClick = { /* Share ride info */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color(0xFF383838)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = Color(0xFFD1D1D1)
-                    ),
-                    shape = RoundedCornerShape(32.dp)
-                ) {
-                    Text(
-                        text = "Share Ride Info",
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
+            ShareRideInfoButton()
         }
     }
 }
+

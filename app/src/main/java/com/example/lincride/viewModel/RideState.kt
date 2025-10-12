@@ -2,7 +2,7 @@ package com.example.lincride.viewModel
 
 sealed class RideState {
     data object Initial : RideState()
-    data object OfferRideBottomSheet : RideState()
+//    data object OfferRideBottomSheet : RideState()
     data class DrivingToPickup(val progress: Float) : RideState()
     data object PickupConfirmation : RideState()
     data object RiderAction : RideState()

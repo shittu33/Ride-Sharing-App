@@ -1,22 +1,36 @@
 package com.example.lincride.ui.widget
 
 import android.Manifest
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RichTooltip
+import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,14 +38,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.lifecycle.viewModelScope
 import com.example.lincride.R
 import com.example.lincride.ui.theme.LincColors
@@ -40,14 +57,18 @@ import com.example.lincride.viewModel.RideState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.CameraMoveStartedReason
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -55,10 +76,14 @@ import kotlinx.coroutines.launch
 fun MapView(
     modifier: Modifier = Modifier,
     viewModel: RideSimulationViewModel,
+    bottomPadding: Dp = 0.dp,
+    isBottomSheetMoving: Boolean = false,
 ) {
     val rideState by viewModel.rideState.collectAsState()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+
+    val showCampaignBanner = rideState == RideState.Initial
+
+    val density = LocalDensity.current
 
     // Default location (e.g., Lagos, Nigeria or a central location)
     val defaultLocation = LatLng(6.6111, 3.3645) // Lagos coordinates
@@ -71,14 +96,29 @@ fun MapView(
     var driverLocation by remember { mutableStateOf(defaultLocation) }
     var driverBearing by remember { mutableFloatStateOf(0f) }
 
+    var contentBottomPadding by remember { mutableStateOf(bottomPadding) }
+
+    LaunchedEffect(bottomPadding, rideState) {
+        contentBottomPadding = if (rideState is RideState.Initial) {
+            bottomPadding + 44.dp
+        } else {
+            bottomPadding
+        }
+    }
+
     // Calculate initial bearing to pickup
     LaunchedEffect(Unit) {
         driverBearing = calculateBearing(defaultLocation, pickupLocation)
     }
 
     // Camera position state
-    var cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(defaultLocation, 16f)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(
+            LatLng(
+                defaultLocation.latitude - 0.003,
+                defaultLocation.longitude + 0.003
+            ), 16f
+        )
     }
 
     // Location permission state
@@ -98,9 +138,7 @@ fun MapView(
                 isTrafficEnabled = false,
                 minZoomPreference = 10f,
                 maxZoomPreference = 20f,
-                mapStyleOptions = MapStyleOptions(mapStyleJson),
-//                isTrafficEnabled = true,
-//                isBuildingEnabled = true
+                mapStyleOptions = MapStyleOptions(mapStyleJson)
             )
         )
     }
@@ -109,15 +147,8 @@ fun MapView(
         mutableStateOf(
             MapUiSettings(
                 zoomControlsEnabled = false,
-                myLocationButtonEnabled = false,
+                myLocationButtonEnabled = false, // Disable default button
                 compassEnabled = false,
-//                indoorLevelPickerEnabled = false,
-//                mapToolbarEnabled = false,
-//                rotationGesturesEnabled = true,
-//                scrollGesturesEnabled = true,
-//                scrollGesturesEnabledDuringRotateOrZoom = true,
-//                tiltGesturesEnabled = false,
-//                zoomGesturesEnabled = true
             )
         )
     }
@@ -136,28 +167,39 @@ fun MapView(
         )
     }
 
+    LaunchedEffect(rideState) {
+        if (showCampaignBanner) {
+            driverLocation = defaultLocation
+            driverBearing = calculateBearing(defaultLocation, pickupLocation)
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.fromLatLngZoom(defaultLocation, 16f)
+                ),
+                durationMs = 800
+            )
+        }
+    }
+
+    // Camera adjustment effect for bottom sheet movement
+    CameraAdjustmentEffect(
+        camera = cameraPositionState,
+        isBottomSheetMoving = isBottomSheetMoving,
+        bottomPadding = contentBottomPadding,
+        density = density
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = mapProperties,
             uiSettings = uiSettings,
-//            locationSource =
+            contentPadding = PaddingValues(bottom = contentBottomPadding.coerceAtLeast(0.dp))
         ) {
             // Add markers based on ride state
             when (rideState) {
                 is RideState.Initial -> {
                     // Reset camera to default position
-                    LaunchedEffect(Unit) {
-                        driverLocation = defaultLocation
-                        driverBearing = calculateBearing(defaultLocation, pickupLocation)
-                        cameraPositionState.animate(
-                            update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
-                                CameraPosition.fromLatLngZoom(defaultLocation, 16f)
-                            ),
-                            durationMs = 800
-                        )
-                    }
 
                     // Show driver location with animated marker
                     AnimatedCarMarker(
@@ -171,37 +213,6 @@ fun MapView(
                     )
                 }
 
-                is RideState.OfferRideBottomSheet -> {
-                    // Create smooth route preview from driver to pickup
-                    val route = remember(defaultLocation, pickupLocation) {
-                        createSmoothRoute(defaultLocation, pickupLocation, 100)
-                    }
-
-                    // Draw route line (orange)
-                    RoutePolyline(
-                        points = route,
-                        color = Color(0xFFD97B2E),
-                        width = 12f
-                    )
-
-                    // Show pickup location marker with ripple animation
-                    PickupLocationMarker(
-                        position = pickupLocation,
-                        title = "Pickup Location",
-                        snippet = "Tap to view details"
-                    )
-
-
-                    // Show driver car pointing toward pickup
-                    AnimatedCarMarker(
-                        position = driverLocation,
-                        rotation = driverBearing,
-                        title = "You",
-                        carIconRes = R.drawable.car,
-                        showRipple = false,
-                        showBeam = false
-                    )
-                }
 
                 is RideState.DrivingToPickup -> {
                     // Create smooth route from start to pickup
@@ -213,18 +224,13 @@ fun MapView(
                     val (animatedPosition, animatedBearing, remainingRoute) = animateCarAlongRoute(
                         route = route,
                         isAnimating = true,
-                        durationMs = 8000L, // 8 seconds total
-                        onComplete = {animatedPosition, _ ->
-                            driverLocation = pickupLocation
-                            viewModel.viewModelScope.launch {
-                                cameraPositionState.animate(
-                                    update = com.google.android.gms.maps.CameraUpdateFactory.newCameraPosition(
-                                        CameraPosition.fromLatLngZoom(animatedPosition, 16f)
-                                    ),
-                                    durationMs = 300
-                                )
+                        durationMs = 8000L, // 8 seconds total,
+                        viewModel = viewModel,
+                        onComplete = { animatedPosition, _ ->
+                            if (!viewModel.isDrivingToPickupCancelled) {
+                                driverLocation = animatedPosition
+                                viewModel.showConfirmPickupBottomSheet()
                             }
-                            viewModel.showConfirmPickupBottomSheet()
                         }
                     )
 
@@ -238,7 +244,9 @@ fun MapView(
                         } else {
                             0f
                         }
-                        viewModel.updateCarMovementProgress(progress)
+                        if (!viewModel.isDrivingToPickupCancelled) {
+                            viewModel.updateCarMovementProgress(progress)
+                        }
                     }
 
 
@@ -311,9 +319,12 @@ fun MapView(
                         route = routeToDestination,
                         isAnimating = true,
                         durationMs = 10000L, // 10 seconds for longer route
-                        onComplete = {_, _ ->
-                            driverLocation = destinationLocation
-                            viewModel.endTrip()
+                        viewModel = viewModel,
+                        onComplete = { animatedPosition, _ ->
+                            if (!viewModel.isDrivingToDestinationCancelled) {
+                                driverLocation = animatedPosition
+                                viewModel.endTrip()
+                            }
                         }
                     )
 
@@ -327,7 +338,26 @@ fun MapView(
                         } else {
                             0f
                         }
-                        viewModel.updateCarMovementProgress(progress)
+                        if (!viewModel.isDrivingToDestinationCancelled) {
+                            viewModel.updateCarMovementProgress(progress)
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        if (!viewModel.isDrivingToDestinationCancelled) {
+                            delay(700) // Wait before showing bottom sheet
+                            // Offset camera slightly south to keep car visible above bottom sheet
+                            val offsetPosition = LatLng(
+                                animatedPosition.latitude - 0.003, // Move camera down slightly
+                                animatedPosition.longitude
+                            )
+                            cameraPositionState.animate(
+                                update = CameraUpdateFactory.newCameraPosition(
+                                    CameraPosition.fromLatLngZoom(offsetPosition, 16f)
+                                ),
+                                durationMs = 700
+                            )
+                        }
                     }
 
                     // Draw shrinking route polyline (only remaining path)
@@ -350,7 +380,7 @@ fun MapView(
                         title = "You",
                         carIconRes = R.drawable.car,
                         showRipple = false,
-                        showBeam = true
+                        showBeam = false
                     )
                 }
 
@@ -377,82 +407,115 @@ fun MapView(
                     )
                 }
             }
-        }
 
+        }
         // Overlay controls
         MapOverLayView(
+            modifier = Modifier.align(Alignment.TopEnd),
             viewModel = viewModel,
-            modifier = Modifier.align(Alignment.TopEnd)
+            showCampaignBanner = showCampaignBanner,
+            bottomPadding = bottomPadding,
+            cameraPositionState, contentBottomPadding, driverLocation
         )
+
     }
 }
 
 @Composable
-private fun MapOverLayView(
+private fun BoxScope.MapOverLayView(
+    modifier: Modifier = Modifier,
     viewModel: RideSimulationViewModel,
-    modifier: Modifier = Modifier
+    showCampaignBanner: Boolean,
+    bottomPadding: Dp,
+    cameraPositionState: CameraPositionState,
+    contentBottomPadding: Dp,
+    driverLocation: LatLng
 ) {
     val rideState by viewModel.rideState.collectAsState()
-    Column(
-        modifier
-            .wrapContentWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+
+    if (rideState is RideState.RiderAction ||
+        rideState is RideState.DrivingToPickup ||
+        rideState is RideState.DrivingToDestination
     ) {
-        // Stop new requests button - shown during active ride states
-
-        if (rideState is RideState.RiderAction ||
-            rideState is RideState.DrivingToPickup ||
-            rideState is RideState.DrivingToDestination ||
-            rideState is RideState.OfferRideBottomSheet
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(top = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                StopNewRequestsButton(
-                    onClick = {
-                        // Handle stop new requests action
-                        // This could reset to initial state or pause ride requests
-                    }
-                )
-            }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Box(
+        Column(
             modifier = Modifier
-                .size(50.dp)
-                .background(shape = CircleShape, color = LincColors.surface)
-//                .shadow(1.dp)
-                .clip(
-                    CircleShape
-                )
-                .border(
-                    BorderStroke(1.dp, LincColors.stroke.copy(0.7f)),
-                    shape = CircleShape
-                )
-                .clickable {
-
-                    viewModel.resetSimulation()
-
-                }.align(Alignment.End),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(top = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            //Reset Icon
-            Icon(
-                painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.ic_menu_rotate),
-                contentDescription = "Reset Simulation",
-                tint = Color.Blue
+            StopNewRequestsButton(
+                onClick = {
+                    // Handle stop new requests action
+                    // This could reset to initial state or pause ride requests
+                }
             )
         }
-        //Round Icon Button to reset simulation
-
-        Spacer(modifier = Modifier.weight(6f))
     }
+
+    // Emergency button - always visible above bottom sheet
+    EmergencyButton(
+        onClick = { /* Handle emergency click */ },
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(bottom = contentBottomPadding + 46.dp, start = 2.dp)
+    )
+
+    if (showCampaignBanner)
+        BottomSheetBanner(
+            iconRes = R.drawable.ic_campaign, // Placeholder - replace with actual ticket-discount icon
+            count = "1",
+            label = "Active campaign",
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(top = 0.dp, bottom = max(bottomPadding - 26.dp, 0.dp))
+        )
+
+    Column(
+        Modifier
+            .align(Alignment.BottomEnd)
+            .padding(bottom = contentBottomPadding + 16.dp, end = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+
+        //Round Icon Button to reset simulation
+        SimulationActionButton(
+            onClick = { viewModel.startNextSimulation() },
+            modifier = Modifier.padding(start = 8.dp),
+            icon = R.drawable.ic_chevron_double_right,
+            iconSize = 44.dp,
+            tile = "Reset Simulation"
+        )
+
+        //Round Icon Button to move to next simulation
+        SimulationActionButton(
+            onClick = { viewModel.resetSimulation() },
+            modifier = Modifier,
+            icon = android.R.drawable.ic_menu_rotate,
+            tile = "Next Simulation"
+        )
+
+        // Custom My Location Button
+        SimulationActionButton(
+            onClick = {
+                // Center camera on user's current location
+                // You can get the location from FusedLocationProvider or use the current driverLocation
+                cameraPositionState.position.target.let { currentTarget ->
+                    viewModel.viewModelScope.launch {
+                        cameraPositionState.animate(
+                            CameraUpdateFactory.newLatLngZoom(driverLocation, 16f),
+                            durationMs = 500
+                        )
+                    }
+                }
+            },
+            modifier = Modifier,
+            icon = R.drawable.ic_send,
+            tile = "My Location"
+        )
+    }
+
+
 }
 
 

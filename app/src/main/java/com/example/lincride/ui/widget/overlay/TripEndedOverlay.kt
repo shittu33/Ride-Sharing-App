@@ -46,9 +46,6 @@ fun TripEndedOverlay(
             animateProgress = false
         }
     }
-    
-    // Animation state for smooth appearance
-    val transition = updateTransition(targetState = visible, label = "overlay_transition")
 
     AnimatedVisibility(
         visible = visible,

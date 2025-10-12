@@ -20,6 +20,7 @@ import com.example.lincride.ui.theme.LincColors
 import com.example.lincride.ui.widget.DestinationTextInput
 import com.example.lincride.ui.widget.RideModeOptionWidget
 import com.example.lincride.viewModel.RideSimulationViewModel
+import com.example.lincride.viewModel.RideState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -28,27 +29,18 @@ import kotlinx.coroutines.launch
 fun RideModeBottomSheet(
     viewModel: RideSimulationViewModel
 ) {
+    val rideState by viewModel.rideState.collectAsState()
 
     val rideModeState by viewModel.rideModeState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.viewModelScope.launch {
-            delay(5 * 1000)
-            viewModel.showOfferRideBottomSheet()
-        }
-    }
     Box(
         Modifier
             .fillMaxWidth()
-            .clip(
-                shape = RoundedCornerShape(20.dp, 20.dp, 0.dp, 0.dp),
-            )
             .background(
                 color = LincColors.surface
             )
     ) {
         Column {
-            LincDragHandle(Modifier.align(Alignment.CenterHorizontally))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

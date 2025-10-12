@@ -37,8 +37,8 @@ fun SwipeableActionBar(
     var offsetX by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     
-    // Threshold for triggering actions (40% of width)
-    val threshold = 0.4f
+    // Threshold for triggering actions (20% of width)
+    val threshold = 0.2f
     
     Box(
         modifier = modifier

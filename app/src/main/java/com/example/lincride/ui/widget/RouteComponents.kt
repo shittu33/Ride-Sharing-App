@@ -8,9 +8,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -88,33 +90,6 @@ fun PickupLocationMarker(
         onClick = { onMarkerClick() }
     ) {
         PickUpLocationRipple()
-//        androidx.compose.foundation.layout.Box(
-//            modifier = Modifier.size(100.dp),
-//            contentAlignment = androidx.compose.ui.Alignment.Center
-//        ) {
-        // Animated ripple circles
-//            androidx.compose.foundation.Canvas(
-//                modifier = Modifier.fillMaxSize()
-//            ) {
-//                val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
-//                val baseRadius = 12.dp.toPx()
-//
-//
-//                // Main marker - Outer white circle (border)
-//                drawCircle(
-//                    color = pointerStroke,
-//                    radius = baseRadius,
-//                    center = center
-//                )
-//
-//                // Inner green circle
-//                drawCircle(
-//                    color = pointerColor,
-//                    radius = baseRadius - 3.dp.toPx(),
-//                    center = center
-//                )
-//            }
-//        }
     }
 }
 
@@ -133,7 +108,7 @@ fun DestinationMarker(
         state = rememberMarkerState(position = position),
         title = title,
         snippet = snippet,
-        anchor = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
+        anchor = androidx.compose.ui.geometry.Offset(0.5f, 1f), // Anchor at bottom center
         zIndex = 1f,
         onClick = { onMarkerClick() }
     ) {
@@ -219,7 +194,7 @@ fun PickUpLocationRipple(
         // Apply the animated scale and alpha via graphicsLayer
         Canvas(
             modifier = Modifier
-                .size(60.dp) // Base size for the glow
+                .size(40.dp) // Base size for the glow
                 .graphicsLayer(
                     scaleX = 0.8f,
                     scaleY = 0.8f,
@@ -236,7 +211,7 @@ fun PickUpLocationRipple(
         // --- CENTRAL ELEMENT (Solid Circle + White Border) ---
         Box(
             modifier = Modifier
-                .size(25.dp) // Overall size of the center element
+                .size(20.dp) // Overall size of the center element
                 .clip(CircleShape)
                 .background(Color.White) // White border background
                 .padding(4.dp) // Padding creates the white border thickness
