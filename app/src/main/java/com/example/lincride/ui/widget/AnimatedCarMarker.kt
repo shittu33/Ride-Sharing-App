@@ -137,9 +137,11 @@ private fun DrawScope.drawDirectionalBeam() {
     val beamGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF6B7FFF).copy(alpha = 1f), // Blue-purple at base
-            Color(0xFF6B7FFF).copy(alpha = 0.9f), // Blue-purple at base
-            Color(0xFF8B9FFF).copy(alpha = 0.25f), // Lighter blue in middle
-            Color(0xFFB0C0FF).copy(alpha = 0.1f), // Very light at edges
+            Color(0xFF6B7FFF).copy(alpha = 0.7f), // Blue-purple at base
+            Color(0xFF6B7FFF).copy(alpha = 0.6f), // Blue-purple at base
+            Color(0xFF8B9FFF).copy(alpha = 0.2f), // Lighter blue in middle
+            Color(0xFF8B9FFF).copy(alpha = 0.001f), // Lighter blue in middle
+            Color(0xFFB0C0FF).copy(alpha = 0.0001f), // Very light at edges
             Color.Transparent // Fade to transparent
         ),
         startY = center.y,
