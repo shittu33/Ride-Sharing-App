@@ -77,12 +77,9 @@ fun HomeScreen(viewModel: RideSimulationViewModel) {
                     )
                 }
 
-                is RideState.DrivingToPickup,
-                is RideState.OfferRideBottomSheet -> {
-                    OfferRideBottomSheet(
-                        viewModel = viewModel,
-                    )
-                }
+                        is RideState.DrivingToPickup -> {
+                            OfferRideBottomSheet(viewModel = viewModel)
+                        }
 
                         is RideState.RiderAction -> {
                             RiderActionBottomSheet(viewModel = viewModel)

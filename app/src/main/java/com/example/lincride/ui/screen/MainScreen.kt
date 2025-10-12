@@ -38,23 +38,13 @@ fun MainScreen(
 ) {
     var currentRoute by rememberSaveable { mutableStateOf("home") }
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentColor = Color.Transparent,
-        containerColor = Color.Transparent,
-//        topBar = {
-//            Box(
-//                modifier = Modifier
-//                    .height(1.dp)
-//
-//                    .background(color = Color.Transparent),
-//            )
-//        },
-        bottomBar = {
-            LincBottomNavigationBar(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
+    Box(Modifier) {
+        Scaffold(modifier = Modifier.fillMaxSize(),
+            contentColor = Color.Transparent,
+            containerColor = Color.Transparent,
+
+            bottomBar = {
+                LincBottomNavigationBar(currentRoute = currentRoute, onNavigate = { route ->
                     Log.d("MainScreen", "onNavigate: $route")
                     navController.navigate(route) {
                         launchSingleTop = true
@@ -64,17 +54,30 @@ fun MainScreen(
                         }
                     }
                     currentRoute = route
+                })
+            }) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(paddingValues)
+            ) {
+                content()
+            }
+        }
+        // Trip Ended Overlay (appears on top of everything)
+        TripEndedOverlay(visible = rideState is RideState.TripEnded, onNewTrip = {
+            viewModel.resetSimulation()
+        }, onEarningsHistory = {
+            navController.navigate("history") {
+                launchSingleTop = true
+                restoreState = true
+                popUpTo("home") {
+                    saveState = true
                 }
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues)
-        ) {
-            content()
-        }
+            }
+        }, onCancel = {
+            viewModel.resetSimulation()
+        })
     }
 }
