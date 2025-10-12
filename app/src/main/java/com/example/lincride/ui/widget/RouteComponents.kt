@@ -137,23 +137,69 @@ fun DestinationMarker(
         zIndex = 1f,
         onClick = { onMarkerClick() }
     ) {
-        androidx.compose.foundation.layout.Box(
-            modifier = androidx.compose.ui.Modifier.size(48.dp),
-            contentAlignment = androidx.compose.ui.Alignment.Center
-        ) {
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                drawCircle(
-                    color = Color.White,
-                    radius = size.minDimension / 2
-                )
-                drawCircle(
-                    color = Color(0xFF2C75FF), // Blue for destination
-                    radius = size.minDimension / 2 - 4.dp.toPx()
-                )
-            }
-        }
+        Image(
+            painter = androidx.compose.ui.res.painterResource(id = com.example.lincride.R.drawable.ic_dest_marker),
+            contentDescription = null,
+            modifier = Modifier.size(40.dp)
+        )
+//        Box(
+//            modifier = Modifier
+//                .size(30.dp)
+//                .offset(y = (-1).dp), // Offset to center the circular part
+//            contentAlignment = androidx.compose.ui.Alignment.TopCenter
+//        ) {
+//            androidx.compose.foundation.Canvas(
+//                modifier = Modifier.fillMaxSize()
+//            ) {
+//                val canvasWidth = size.width
+//                val canvasHeight = size.height
+//
+//                // Main circle dimensions
+//                val circleRadius = canvasWidth * 0.4f
+//                val circleCenterX = canvasWidth / 2
+//                val circleCenterY = circleRadius + 2.dp.toPx()
+//
+//                // Pin/teardrop dimensions
+//                val pinWidth = 8.dp.toPx()
+//                val pinHeight = 12.dp.toPx()
+//                val pinTop = circleCenterY + circleRadius - 2.dp.toPx()
+//
+//                // Draw the pin/teardrop shape at the bottom
+//                val pinPath = androidx.compose.ui.graphics.Path().apply {
+//                    moveTo(circleCenterX, pinTop)
+//                    lineTo(circleCenterX - pinWidth / 2, pinTop)
+//                    lineTo(circleCenterX, pinTop + pinHeight)
+//                    lineTo(circleCenterX + pinWidth / 2, pinTop)
+//                    close()
+//                }
+//
+//                drawPath(
+//                    path = pinPath,
+//                    color = Color(0xFF4A5FC1) // Blue for pin
+//                )
+//
+//                // Draw outer white border circle
+//                drawCircle(
+//                    color = Color.White,
+//                    radius = circleRadius + 3.dp.toPx(),
+//                    center = androidx.compose.ui.geometry.Offset(circleCenterX, circleCenterY)
+//                )
+//
+//                // Draw main blue circle
+//                drawCircle(
+//                    color = Color(0xFF4A5FC1), // Blue for destination
+//                    radius = circleRadius,
+//                    center = androidx.compose.ui.geometry.Offset(circleCenterX, circleCenterY)
+//                )
+//
+//                // Draw inner white dot
+//                drawCircle(
+//                    color = Color.White,
+//                    radius = circleRadius * 0.35f,
+//                    center = androidx.compose.ui.geometry.Offset(circleCenterX, circleCenterY)
+//                )
+//            }
+//        }
     }
 }
 
