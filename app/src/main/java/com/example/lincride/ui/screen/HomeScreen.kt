@@ -30,6 +30,7 @@ import com.example.lincride.ui.theme.LincColors
 import com.example.lincride.ui.widget.BottomSheetBanner
 import com.example.lincride.ui.widget.MapView
 import com.example.lincride.ui.widget.StopNewRequestsButton
+import com.example.lincride.ui.widget.bottom_sheet.HeadingToDestinationBottomSheet
 import com.example.lincride.ui.widget.bottom_sheet.OfferRideBottomSheet
 import com.example.lincride.ui.widget.bottom_sheet.RideModeBottomSheet
 import com.example.lincride.ui.widget.bottom_sheet.RiderActionBottomSheet
@@ -83,16 +84,13 @@ fun HomeScreen(viewModel: RideSimulationViewModel) {
                     )
                 }
 
-                is RideState.RiderAction -> {
-                    RiderActionBottomSheet(
-                        viewModel = viewModel
-                    )
-                }
-                is RideState.DrivingToDestination -> {
-                    RiderActionBottomSheet(
-                        viewModel = viewModel
-                    )
-                }
+                        is RideState.RiderAction -> {
+                            RiderActionBottomSheet(viewModel = viewModel)
+                        }
+
+                        is RideState.DrivingToDestination -> {
+                            HeadingToDestinationBottomSheet(viewModel = viewModel)
+                        }
 
                 else -> {}
             }
