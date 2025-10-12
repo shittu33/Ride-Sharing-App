@@ -156,60 +156,21 @@ private fun DrawScope.drawDirectionalBeam() {
     )
 }
 
-@Composable
-fun PulseComponentAnimation(
-    maxPulseSize: Float = 50f,
-    minPulseSize: Float = 0f,
-    latLng: LatLng
-) {
-
-    val infiniteTransition = rememberInfiniteTransition(label = "PulseComponentAnimation")
-
-    val radius by infiniteTransition.animateFloat(
-        initialValue = minPulseSize,
-        targetValue = maxPulseSize,
-        animationSpec = InfiniteRepeatableSpec(
-            animation = tween(3000), repeatMode = RepeatMode.Restart
-        ),
-        label = "radius"
-    )
-
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = InfiniteRepeatableSpec(
-            animation = tween(3000),
-            repeatMode = RepeatMode.Restart
-        ), label = "alpha"
-    )
-
-
-    Circle(
-        center = latLng,
-        clickable = false,
-        fillColor = Color(0xff2FAA59).copy(alpha = alpha),
-        radius = radius.toDouble(),
-        strokeColor = Color.Transparent,
-        strokeWidth = 0f,
-        tag = "",
-        onClick = { }
-    )
-}
 
 @Composable
 fun RiderLocationRipple(
-    pulseColor: Color = Color(0xFF5B68F3).copy(alpha = 0.3f), // Blue with opacity
+    pulseColor: Color = Color(0xFF5B68F3).copy(alpha = 0.15f), // Blue with opacity
     durationMillis: Int = 1500 // Speed of the pulse
 ) {
     Box(
-        modifier = Modifier.size(80.dp), // Container large enough for the max scale
+        modifier = Modifier.size(70.dp), // Container large enough for the max scale
         contentAlignment = Alignment.Center
     ) {
         // --- OUTER GLOW/RIPPLE ---
         // Apply the animated scale and alpha via graphicsLayer
         Canvas(
             modifier = Modifier
-                .size(80.dp) // Base size for the glow
+                .size(70.dp) // Base size for the glow
                 .graphicsLayer(
                     scaleX = 0.8f,
                     scaleY = 0.8f,
@@ -226,7 +187,7 @@ fun RiderLocationRipple(
         // --- CENTRAL ELEMENT (Solid Circle + White Border) ---
         Box(
             modifier = Modifier
-                .size(35.dp) // Overall size of the center element
+                .size(30.dp) // Overall size of the center element
                 .clip(CircleShape)
                 .background(Color.White) // White border background
                 .padding(4.dp) // Padding creates the white border thickness
