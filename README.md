@@ -160,8 +160,8 @@ UI (Compose) → ViewModel → Repository → Data Source (API Service)
 
 <div style="display: flex; gap: 10px;">
 
-<img src="screenshot/linc_app.png" alt="App Screenshot" width="23%", height="700" />
-<img src="screenshot/linc_figma.png" alt="Figma Design" width="23%, height="700" />
+<img src="screenshot/linc_app.png" alt="App Screenshot" width="23%" height="700" />
+<img src="screenshot/linc_figma.png" alt="Figma Design" width="23% height="700" />
 </div>
 
 *Left: Actual App Implementation | Right: Figma Design*
