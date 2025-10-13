@@ -61,8 +61,6 @@ class RideSimulationViewModel @Inject constructor() : ViewModel() {
 
     // Start driving simulation to destination (Event 5)
     fun startDrivingToDestination() {
-        Log.d("RideSimulationVM", "Starting driving to destination")
-        Log.d("RideSimulationVM", "isDrivingToDestinationCancelled: $isDrivingToDestinationCancelled in ${_cancelSimulationState.value}")
         _riderStateJob = viewModelScope.launch {
             _carMovementProgress.value = 0f // Reset progress
             _rideState.value = RideState.DrivingToDestination(0f)
@@ -93,15 +91,6 @@ class RideSimulationViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun resetCancelSimulationState() {
-        //cancel any ongoing job
-        _riderStateJob?.cancel()
-
-        viewModelScope.launch {
-            // reset the cancelled states
-            _cancelSimulationState.value = emptyList()
-        }
-    }
 
     fun startNextSimulation() {
         val nextState = when (_rideState.value) {

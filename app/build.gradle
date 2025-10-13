@@ -41,6 +41,13 @@ android {
         compose true
         buildConfig true
     }
+
+    // Enable JUnit 5 for unit tests
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
 }
 
 secrets {
@@ -81,6 +88,15 @@ dependencies {
     implementation "com.google.accompanist:accompanist-permissions:0.34.0"
     
     testImplementation libs.junit
+    
+    // JUnit 5 (Jupiter) for @Nested, @DisplayName, and modern testing features
+    testImplementation libs.junit.jupiter.api
+    testRuntimeOnly libs.junit.jupiter.engine
+    testImplementation libs.junit.jupiter.params
+    
+    // JUnit Vintage Engine (allows running JUnit 4 tests with JUnit 5)
+    testRuntimeOnly libs.junit.vintage.engine
+    
     androidTestImplementation libs.androidx.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation platform(libs.androidx.compose.bom)
