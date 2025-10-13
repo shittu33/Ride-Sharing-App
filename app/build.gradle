@@ -78,15 +78,16 @@ dependencies {
 
     // Google Maps Compose library
     def mapsComposeVersion = "4.4.1"
-    implementation "com.google.maps.android:maps-compose:$mapsComposeVersion"
+    implementation libs.maps.compose
     // Google Maps Compose utility library
-    implementation "com.google.maps.android:maps-compose-utils:$mapsComposeVersion"
+    implementation libs.maps.compose.utils
     // Google Maps Compose widgets library
-    implementation "com.google.maps.android:maps-compose-widgets:$mapsComposeVersion"
+    implementation libs.maps.compose.widgets
     
     // Accompanist permissions for handling runtime permissions
-    implementation "com.google.accompanist:accompanist-permissions:0.34.0"
+    implementation libs.accompanist.permissions
     
+    // JUnit 4 (for legacy tests and InstantTaskExecutorRule)
     testImplementation libs.junit
     
     // JUnit 5 (Jupiter) for @Nested, @DisplayName, and modern testing features

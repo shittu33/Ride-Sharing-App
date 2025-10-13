@@ -120,3 +120,13 @@ fun PickupProgressBarWidget(
         )
     }
 }
+
+// Overload for StateFlow support (used in tests)
+@Composable
+fun PickupProgressBarWidget(
+    progressFlow: kotlinx.coroutines.flow.StateFlow<Float>,
+    modifier: Modifier = Modifier
+) {
+    val progress by progressFlow.collectAsState()
+    PickupProgressBarWidget(progress = progress, modifier = modifier)
+}

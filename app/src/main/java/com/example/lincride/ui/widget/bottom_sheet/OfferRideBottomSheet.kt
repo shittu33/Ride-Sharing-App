@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,7 +77,10 @@ fun OfferRideBottomSheet(
             }
             
             // Progress bar with car and destination icons
-            PickupProgressBarWidget(progress = progress)
+            PickupProgressBarWidget(
+                progress = progress,
+                modifier = Modifier.testTag("pickup_progress_bar")
+            )
 
             HorizontalDivider(Modifier.height(6.dp), color = LincColors.stroke, thickness = 0.4.dp)
 
