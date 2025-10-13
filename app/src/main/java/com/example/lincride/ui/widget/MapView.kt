@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
@@ -52,6 +53,8 @@ import androidx.compose.ui.unit.max
 import androidx.lifecycle.viewModelScope
 import com.example.lincride.R
 import com.example.lincride.ui.theme.LincColors
+import com.example.lincride.ui.widget.overlay.MapsApiKeyErrorOverlay
+import com.example.lincride.utils.MapsApiKeyValidator
 import com.example.lincride.viewModel.RideSimulationViewModel
 import com.example.lincride.viewModel.RideState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -79,6 +82,17 @@ fun MapView(
     bottomPadding: Dp = 0.dp,
     isBottomSheetMoving: Boolean = false,
 ) {
+    val context = LocalContext.current
+    
+    // Check API key status
+    val apiKeyStatus = remember { MapsApiKeyValidator.checkApiKeyStatus(context) }
+
+    // Show error overlay if API key is invalid
+    if (!apiKeyStatus.isValid()) {
+        MapsApiKeyErrorOverlay(apiKeyStatus = apiKeyStatus)
+        return
+    }
+
     val rideState by viewModel.rideState.collectAsState()
 
     val showCampaignBanner = rideState == RideState.Initial
