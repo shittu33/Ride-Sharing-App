@@ -1,21 +1,11 @@
-# Linc Ride - Driver App
+# Linc Ride Test - Driver App
 
-A ride-sharing Android application for drivers, built with Jetpack Compose and Google Maps integration. This app simulates the driver's journey from offering a ride to completing a trip.
 
-## 📱 Screenshots
-
-<div style="display: flex; gap: 10px;">
-  <img src="screenshot/linc_app.png" alt="App Screenshot" width="45%" />
-  <img src="screenshot/linc_figma.png" alt="Figma Design" width="45%" />
-</div>
-
-*Left: Actual App Implementation | Right: Figma Design*
-
-> **Note:** As per the [Google Maps Platform Terms of Service](https://developers.google.com/maps/documentation/android-sdk/configure-map#set_up_map_padding), the application must not remove or obscure the Google logo or copyright notices. All map implementations comply with this requirement.
+A ride-sharing Android application for drivers, built with compose for assessment purpose.
 
 ---
 
-## 🚀 How to Build and Run
+## How to Build and Run
 
 ### Prerequisites
 - Android Studio (Ladybug Feature Drop or later): not necessarily but its what i use
@@ -50,7 +40,7 @@ A ride-sharing Android application for drivers, built with Jetpack Compose and G
 #### Unit Tests (JUnit 5)
 ```bash
 # Run all unit tests
-./gradlew :app:testDebugUnitTest
+./gradlew :app:testDebugUnitTest --rerun-tasks
 ```
 
 #### UI Tests (Instrumented)
@@ -58,8 +48,6 @@ A ride-sharing Android application for drivers, built with Jetpack Compose and G
 # Run all UI tests (requires connected device/emulator)
 ./gradlew :app:connectedAndroidTest
 
-# Run specific UI test
-./gradlew :app:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.lincride.RideSimulationUITest
 ```
 
 ### Build APK
@@ -68,14 +56,11 @@ A ride-sharing Android application for drivers, built with Jetpack Compose and G
 ./gradlew assembleDebug
 # Output: app/build/outputs/apk/debug/app-debug.apk
 
-# Release APK (unsigned)
-./gradlew assembleRelease
-# Output: app/build/outputs/apk/release/app-release-unsigned.apk
 ```
 
 ---
 
-## 🏗️ Architecture & Design Decisions
+## Architecture & Design Decisions
 
 ### Architecture Pattern: MVVM (Model-View-ViewModel)
 
@@ -171,7 +156,20 @@ UI (Compose) → ViewModel → Repository → Data Source (API Service)
 - **Crash Reporting:** Integrate Crashlytics for production monitoring
 - **Accessibility:** Add content descriptions and improve screen reader support
 
+## 📱 Suggestions
+
+<div style="display: flex; gap: 10px;">
+
+<img src="screenshot/linc_app.png" alt="App Screenshot" width="23%", height="700" />
+<img src="screenshot/linc_figma.png" alt="Figma Design" width="23%, height="700" />
+</div>
+
+*Left: Actual App Implementation | Right: Figma Design*
+
+> **Note:** As per the [Google Maps Platform Terms of Service](https://developers.google.com/maps/documentation/android-sdk/configure-map#set_up_map_padding), the application must not remove or obscure the Google logo or copyright notices. All map implementations comply with this requirement. Hence the reason for shifting the emergency button upwards.
+
 ---
+
 
 ## 🎮 How to Trigger Simulated Events
 
