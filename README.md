@@ -1,9 +1,8 @@
 # Ride Sharing App - Driver App
 
-
 A ride-sharing Android application for drivers, built with compose.
 
----
+<img src="screenshot/linc_app.png" alt="Control Buttons" width="300" />
 
 ## How to Build and Run
 
