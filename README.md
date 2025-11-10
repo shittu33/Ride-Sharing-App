@@ -2,7 +2,7 @@
 
 A ride-sharing Android application for drivers, built with compose.
 
-<img src="screenshot/linc_app.png" alt="Control Buttons" width="300" />
+<img src="screenshot/linc_app.png" alt="Control Buttons" width="200" />
 
 ## How to Build and Run
 
