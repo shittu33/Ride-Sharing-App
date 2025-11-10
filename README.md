@@ -1,4 +1,4 @@
-# Linc Ride Test - Driver App
+# Ride Sharing App - Driver App
 
 
 A ride-sharing Android application for drivers, built with compose for assessment purpose.
